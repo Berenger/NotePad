@@ -1,0 +1,51 @@
+.App-note {
+  padding: 5px;
+}
+
+.App-Header {
+  padding: 10px;
+  background-color: #D3D3D3;
+  color: #333333;
+}
+
+.App-Header span {
+  color: #8B0000;
+}
+
+.Editor-container {
+  display: flex;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.Line-numbers {
+  background-color: #fff;
+  color: #888;
+  padding: 0px 5px;
+  text-align: right;
+  border-right: 1px solid #ddd;
+  user-select: none;
+}
+
+.Line-number {
+  margin: 0;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.Zone-text {
+  flex: 1;
+  padding: 13px 10px 10px 10px;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 825px;
+}
