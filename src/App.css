@@ -1,33 +1,35 @@
 .App-note {
   padding: 5px;
+  background-color: #282a36;
 }
 
 .App-Header {
   padding: 10px;
-  background-color: #D3D3D3;
-  color: #333333;
+  background-color: #282a36;
+  color: #f8f8f2;
 }
 
 .App-Header span {
-  color: #8B0000;
+  color: #ff79c6;
 }
 
 .Editor-container {
   display: flex;
-  border: 1px solid #ddd;
+  border: 1px solid #6272a4;
   border-radius: 5px;
   overflow: hidden;
   font-family: monospace;
   font-size: 14px;
   line-height: 1.5;
+  background-color: #282a36;
 }
 
 .Line-numbers {
-  background-color: #fff;
-  color: #888;
+  background-color: #282a36;
+  color: #6272a4;
   padding: 0px 5px;
   text-align: right;
-  border-right: 1px solid #ddd;
+  border-right: 1px solid #44475a;
   user-select: none;
 }
 
@@ -36,6 +38,7 @@
   font-family: monospace;
   font-size: 14px;
   line-height: 1.5;
+  color: #6272a4;
 }
 
 .Zone-text {
@@ -48,4 +51,7 @@
   font-size: 14px;
   line-height: 1.5;
   min-height: 825px;
+  background-color: #282a36;
+  color: #f8f8f2;
+  caret-color: #ff79c6;
 }

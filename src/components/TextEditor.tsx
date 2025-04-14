@@ -1,22 +1,49 @@
-import { useState, useEffect, FC } from "react";
+import React, { useState, useEffect } from "react";
+import config from "../config/config";
 
 interface TextEditorProps {
-  pageId: string;
+  pageId: string; // Paramètre pour identifier la note
 }
 
-const TextEditor: FC<TextEditorProps> = ({ pageId }) => {
-  const [text, setText] = useState<string>("");
+const TextEditor: React.FC<TextEditorProps> = ({ pageId }) => {
+  const [text, setText] = useState<string>(""); // Contenu de l'éditeur
+  const [ws, setWs] = useState<WebSocket | null>(null); // Instance WebSocket
 
-  useEffect(() => {
-    const savedText = localStorage.getItem(`editorText_${pageId}`);
-    if (savedText) {
-      setText(savedText);
+  // Fonction de gestion des changements dans la zone de texte
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = e.target.value;
+    setText(newText);
+
+    // Envoyer les modifications au serveur WebSocket
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(newText);
     }
-  }, [pageId]);
+  };
 
   useEffect(() => {
-    localStorage.setItem(`editorText_${pageId}`, text);
-  }, [text, pageId]);
+    // Initialiser la connexion WebSocket avec le serveur
+    const socket = new WebSocket(`${config.wsUrl}?pageId=${pageId}`);
+    setWs(socket);
+
+    // Actions lors de l'ouverture de la connexion WebSocket
+    socket.onopen = () => {
+    };
+
+    // Actions lors de la réception de messages depuis le serveur
+    socket.onmessage = (event) => {
+      const receivedText = event.data;
+      setText(receivedText); // Charger/mettre à jour le texte reçu
+    };
+
+    // Actions lors de la fermeture de la connexion
+    socket.onclose = () => {
+    };
+
+    // Nettoyage à la fermeture du composant (fermeture de la connexion WebSocket)
+    return () => {
+      socket.close();
+    };
+  }, [pageId]);
 
   const getLineNumbers = () => {
     const lineCount = Math.max(text.split("\n").length, 42);
@@ -24,14 +51,14 @@ const TextEditor: FC<TextEditorProps> = ({ pageId }) => {
   };
 
   return (
-    <div className="Editor-container">
+    <div className="Editor-container" style={{ display: "flex" }}>
       <div className="Line-numbers">
-        <pre className="Line-number'">{getLineNumbers()}</pre>
+        <pre>{getLineNumbers()}</pre>
       </div>
 
       <textarea
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={handleChange}
         className="Zone-text"
         placeholder="Start writing here..."
         rows={42}

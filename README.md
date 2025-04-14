@@ -1,52 +1,169 @@
-# Getting Started with Create React App
+# 📝 NotePad
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+NotePad is a real-time collaborative note-taking application. It allows multiple users to simultaneously edit the same document through a simple and intuitive interface, with instant synchronization between all participants.
 
-## Installing Dependencies
+----------
 
-In the project directory, you run:
+## 🧠 Key Features
 
-### `npm install`
+-   ✍️ Real-time collaborative editing
+    
+-   🔗 Shareable documents via unique URLs
+    
+-   💾 Server-side data persistence
+    
+-   📄 Multi-document support using page identifiers
+   
+----------
 
-## Available Scripts
+## 🛠️ Tech Stack
 
-In the project directory, you can run:
+-   **Backend**: Go, WebSockets (`gorilla/websocket`)
+    
+-   **Frontend**: React, WebSockets
+    
 
-### `npm start`
+----------
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## 📦 Backend
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### 📋 Description
 
-### `npm test`
+The Go server manages WebSocket connections, synchronizes changes between clients, and saves documents in text files.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### ⚙️ Requirements
 
-### `npm run build`
+-   Go **1.16+**
+    
+-   `github.com/gorilla/websocket` module
+    
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 🚀 Installation & Usage
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1.  Clone the repository:
+    
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+git clone git@github.com:Berenger/NotePad.git
+cd NotePad/backend
+```
 
-### `npm run eject`
+2.  Install dependencies:
+    
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+```
+go mod download
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+3.  Start the server (default port: `8080`):
+    
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```
+go run main.go
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+4.  Start with a custom port:
+    
 
-## Learn More
+```
+go run main.go -port 3000
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+5.  (Optional) Build the executable:
+    
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+go build -o notepad
+./notepad -port 8080
+```
+
+### 🔐 Security
+
+> **Note:** By default, the server accepts WebSocket connections from **any origin**. This should be changed before deploying to production.
+
+### ⚠️ Limitations
+
+-   No authentication system
+    
+-   No conflict resolution (last write wins)
+    
+-   No WebSocket compression
+    
+
+----------
+
+## 🎨 Frontend
+
+### 📋 Description
+
+A modern React interface for collaborative editing. It enables real-time document updates by maintaining a persistent WebSocket connection to the server.
+
+### ⚙️ Requirements
+
+-   Node.js **14.x+**
+    
+-   npm **6.x+**
+    
+-   A running instance of the backend server
+    
+
+### 🚀 Installation & Usage
+
+1.  Clone the repository:
+    
+
+```
+git clone git@github.com:Berenger/NotePad.git
+cd NotePad
+```
+
+2.  Install dependencies:
+    
+
+```
+npm install
+```
+
+3.  Create the environment file:
+    
+
+```
+cp .env.example .env
+```
+
+Example configuration:
+
+```
+REACT_APP_WS_URL=ws://localhost:8080/ws
+```
+
+> Adjust the WebSocket URL according to your backend server location.
+
+4.  Start the development server:
+    
+
+```
+npm start
+```
+
+The application will be available at [http://localhost:3000](http://localhost:3000)
+
+### 🏗️ Production Build
+
+Generate an optimized production build:
+
+```
+npm run build
+```
+
+----------
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to open an issue or a pull request.
+
+----------
+
+## 📄 License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
