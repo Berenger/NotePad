@@ -1,4 +1,11 @@
+# macOS system files
 .DS_Store
-/pages/*
-go.sum
+
+# Application executable
 notepad
+
+# Data directories
+# Folder containing generated/saved page files
+/pages/*
+# Uncomment to keep empty directory in Git
+!/pages/.gitignore

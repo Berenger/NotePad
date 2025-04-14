@@ -12,38 +12,40 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// Structure pour stocker les connexions des clients
+// Client structure to store client connections
 type Client struct {
-	conn *websocket.Conn
-	send chan []byte
+	conn *websocket.Conn // WebSocket connection
+	send chan []byte     // Channel to send messages to the client
 }
 
-// Map pour synchroniser les éditeurs par pageId
+// Map to synchronize editors by pageId
 var pageEditors = make(map[string]map[*Client]bool)
-var fileMux = make(map[string]*sync.Mutex) // Mutex par fichier
-var mux sync.Mutex
+var fileMux = make(map[string]*sync.Mutex) // Mutex per file / Mutex par fichier
+var mux sync.Mutex                         // Global mutex for map access
 
+// Directory to store files
 // Dossier pour stocker les fichiers
 const storageDir = "./pages"
 
-// Gestionnaire WebSocket
+// WebSocket handler configuration
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		return true // Autoriser toutes les origines, ajustez selon votre sécurité
+		return true // Allow all origins - adjust according to your security needs
 	},
 }
 
+// Handle WebSocket connections
 func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("Erreur lors de la mise à niveau WebSocket :", err)
+		log.Println("Error upgrading to WebSocket:", err)
 		return
 	}
 
-	// Récupérer le pageId depuis l'URL
+	// Get pageId from URL query parameters
 	pageId := r.URL.Query().Get("pageId")
 	if pageId == "" {
-		log.Println("pageId manquant")
+		log.Println("Missing pageId")
 		conn.Close()
 		return
 	}
@@ -53,50 +55,51 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		send: make(chan []byte),
 	}
 
-	// S'assurer que le mutex pour ce fichier existe
+	// Ensure the mutex exists for this file
 	mux.Lock()
 	if fileMux[pageId] == nil {
 		fileMux[pageId] = &sync.Mutex{}
 	}
 	mux.Unlock()
 
-	// Ajouter le client à la liste des éditeurs de cette page
+	// Add the client to the editors list for this page
 	addClient(client, pageId)
 
-	// Lancer une goroutine pour écrire les messages
+	// Launch a goroutine to write messages
 	go writeMessages(client)
 
-	// Envoyer l'historique du fichier au nouveau client
+	// Send file history to the new client
 	sendHistoryToClient(client, pageId)
 
-	// Lire les messages du client
+	// Read messages from the client
 	readMessages(client, pageId)
 }
 
-// Envoyer l'historique du fichier au client qui vient de se connecter
+// Send file history to a newly connected client
 func sendHistoryToClient(client *Client, pageId string) {
 	filePath := getFilePath(pageId)
 
-	// Vérifier si le fichier existe
+	// Check if the file exists
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return // Le fichier n'existe pas encore
+		return // File doesn't exist yet
 	}
 
 	fileMux[pageId].Lock()
 	defer fileMux[pageId].Unlock()
 
-	// Lire le contenu du fichier
+	// Read file content
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return
 	}
 
-	// Envoyer le contenu au client
+	// Send content to client
 	if len(content) > 0 {
 		client.send <- content
 	}
 }
 
+// Read incoming messages from a client
 func readMessages(client *Client, pageId string) {
 	defer func() {
 		client.conn.Close()
@@ -106,31 +109,32 @@ func readMessages(client *Client, pageId string) {
 	for {
 		_, msg, err := client.conn.ReadMessage()
 		if err != nil {
-			log.Println("Erreur de lecture :", err)
+			log.Println("Read error:", err)
 			break
 		}
 
-		// Sauvegarder le message dans un fichier
+		// Save message to file
 		saveMessageToFile(pageId, msg)
 
-		// Diffuser le message aux autres clients
+		// Broadcast message to other clients
 		broadcastMessage(pageId, msg)
 	}
 }
 
+// Write messages to a client
 func writeMessages(client *Client) {
 	defer client.conn.Close()
 
 	for msg := range client.send {
 		err := client.conn.WriteMessage(websocket.TextMessage, msg)
 		if err != nil {
-			log.Println("Erreur d'écriture :", err)
+			log.Println("Write error:", err)
 			break
 		}
 	}
 }
 
-// Ajouter un client à une page
+// Add a client to a page
 func addClient(client *Client, pageId string) {
 	mux.Lock()
 	defer mux.Unlock()
@@ -141,7 +145,7 @@ func addClient(client *Client, pageId string) {
 	pageEditors[pageId][client] = true
 }
 
-// Supprimer un client d'une page
+// Remove a client from a page
 func removeClient(client *Client, pageId string) {
 	mux.Lock()
 	defer mux.Unlock()
@@ -155,7 +159,7 @@ func removeClient(client *Client, pageId string) {
 	close(client.send)
 }
 
-// Diffuser un message à tous les clients sur une page
+// Broadcast a message to all clients on a page
 func broadcastMessage(pageId string, msg []byte) {
 	mux.Lock()
 	defer mux.Unlock()
@@ -172,52 +176,52 @@ func broadcastMessage(pageId string, msg []byte) {
 	}
 }
 
-// Sauvegarder un message dans un fichier
+// Save a message to a file
 func saveMessageToFile(pageId string, msg []byte) {
-	// Obtenir le mutex spécifique au fichier
+	// Get the file-specific mutex
 	mux.Lock()
 	mutex := fileMux[pageId]
 	mux.Unlock()
 
-	// Verrouiller l'accès au fichier
+	// Lock file access
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	// Créer le dossier s'il n'existe pas
+	// Create directory if it doesn't exist
 	if err := os.MkdirAll(storageDir, 0755); err != nil {
-		log.Println("Erreur lors de la création du répertoire:", err)
+		log.Println("Error creating directory:", err)
 		return
 	}
 
-	// Chemin du fichier
+	// File path
 	filePath := getFilePath(pageId)
 
-	// Écrire dans le fichier
+	// Write to file
 	if err := os.WriteFile(filePath, msg, 0644); err != nil {
-		log.Println("Erreur lors de l'écriture dans le fichier:", err)
+		log.Println("Error writing to file:", err)
 	}
 }
 
-// Obtenir le chemin du fichier pour un pageId
+// Get file path for a pageId
 func getFilePath(pageId string) string {
 	return filepath.Join(storageDir, fmt.Sprintf("%s.txt", pageId))
 }
 
 func main() {
-	// Définir le flag pour le port
-	portPtr := flag.String("port", "8080", "port sur lequel le serveur va écouter")
+	// Define port flag
+	portPtr := flag.String("port", "8080", "port the server will listen on")
 
-	// Parser les flags de la ligne de commande
+	// Parse command line flags
 	flag.Parse()
 
-	// Créer le répertoire de stockage s'il n'existe pas
+	// Create storage directory if it doesn't exist
 	if err := os.MkdirAll(storageDir, 0755); err != nil {
-		log.Fatalf("Erreur lors de la création du répertoire de stockage: %v", err)
+		log.Fatalf("Error creating storage directory: %v", err)
 	}
 
 	http.HandleFunc("/ws", handleWebSocket)
 
 	port := ":" + *portPtr
-	fmt.Println("Serveur en écoute sur", port)
+	fmt.Println("Server listening on port", port)
 	log.Fatal(http.ListenAndServe(port, nil))
 }

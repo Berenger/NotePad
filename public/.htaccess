@@ -1,0 +1,19 @@
+# Enable the Apache mod_rewrite engine for URL rewriting
+<IfModule mod_rewrite.c>
+  # Turn on the rewrite engine
+  RewriteEngine On
+  
+  # Set the base URL for rewrites to the root directory
+  RewriteBase /
+  
+  # Skip the rule if the request is for an existing file
+  RewriteCond %{REQUEST_FILENAME} !-f
+  
+  # Skip the rule if the request is for an existing directory
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # For any other requests, redirect to index.html
+  # This enables client-side routing in single-page applications
+  # [L] means this is the last rule to process if it matches
+  RewriteRule ^ index.html [L]
+</IfModule>

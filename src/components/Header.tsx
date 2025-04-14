@@ -3,7 +3,7 @@ import { FC } from "react";
 const Header: FC = () => {
   return (
     <header className="App-Header">
-      <b>NotePad</b> - <span>Unsecured app</span> - <span>All data is public</span> - <span>No support provided</span> ☠️
+      <span><b>NotePad</b></span> - This is a public collaboration tool where shared content is visible to all users
     </header>
   );
 };
